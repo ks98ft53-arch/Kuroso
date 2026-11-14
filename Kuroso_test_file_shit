@@ -1,0 +1,57 @@
+-- Matcha whitelist: only allowed Roblox UserIds can run the script.
+-- Anyone else gets a notification and is kicked out of the game.
+
+local Players = game:GetService("Players")
+
+local WHITELIST = {
+    [10316007707] = true,
+}
+
+-- Wait for the game and local player to be ready
+while not game:IsLoaded() do wait(0.1) end
+
+local lp = Players.LocalPlayer
+local waited = 0
+while (not lp or lp.UserId == 0) and waited < 10 do
+    wait(0.1)
+    waited = waited + 0.1
+    lp = Players.LocalPlayer
+end
+
+local function kick(reason)
+    notify(reason, "Whitelist", 5)
+    print("[Whitelist] " .. reason)
+
+    -- 1) Try a native kick (may not exist in Matcha)
+    pcall(function() lp:Kick(reason) end)
+    wait(1)
+
+    -- 2) Fallback: Alt+F4 closes the Roblox window (it must be the active window)
+    keypress(0x12)      -- Alt
+    keypress(0x73)      -- F4
+    wait(0.05)
+    keyrelease(0x73)
+    keyrelease(0x12)
+
+    -- 3) Make sure nothing below this check ever runs
+    assert(false, reason)
+end
+
+local userId = lp and lp.UserId or 0
+
+if not WHITELIST[userId] then
+    kick("Not whitelisted (UserId " .. tostring(userId) .. ")")
+end
+
+print("[Whitelist] Access granted for UserId " .. tostring(userId))
+notify("Access granted", "Whitelist", 3)
+
+----------------------------------------------------------------
+-- Your script goes below this line (only runs if whitelisted)
+----------------------------------------------------------------
+
+UI.AddTab("My Script", function(tab)
+    local sec = tab:Section("Status", "Left")
+    sec:Text("Whitelisted: " .. tostring(userId))
+    sec:Toggle("enabled", "Enabled")
+end)
