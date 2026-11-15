@@ -1,0 +1,41 @@
+--[[
+    Template script (host this at SCRIPT_URL).
+    Runs only after whitelist_loader.lua approves the user.
+    UI Binding only offers UI.AddTab, so the UI is a tab.
+]]
+
+local userId = _G.WL_USERID
+
+local function Notify(message, title)
+    notify(message, title or "Template", 5)
+end
+
+pcall(UI.RemoveTab, "Template") -- avoid duplicate tabs on re-execute
+
+UI.AddTab("Template", function(tab)
+    local main = tab:Section("Main", "Left")
+    main:Text("Whitelisted: " .. tostring(userId))
+    main:Spacing()
+
+    main:Toggle("tpl_enabled", "Enabled", false, function(state)
+        Notify("Enabled: " .. tostring(state))
+    end)
+    main:Keybind("tpl_kb", 0x46, "toggle")
+
+    main:SliderInt("tpl_range", "Range", 1, 5000, 2000)
+    main:Combo("tpl_mode", "Mode", { "Mode A", "Mode B", "Mode C" }, 0)
+
+    main:Button("Test Notification", function()
+        Notify("Template button clicked")
+    end)
+
+    local misc = tab:Section("Misc", "Right")
+    misc:InputText("tpl_note", "Note", "")
+    misc:Button("Reset", function()
+        UI.SetValue("tpl_enabled", false)
+        UI.SetValue("tpl_range", 2000)
+        Notify("Settings reset")
+    end)
+end)
+
+Notify("Template loaded")
